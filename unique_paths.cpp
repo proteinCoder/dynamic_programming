@@ -1,77 +1,78 @@
-#include <iostream>
-#include <vector>
+#include <bits/stdc++.h>
 using namespace std;
 
-// ---------- 1. Recursive (Bottom-Right to Top-Left) ----------
-int uniquePathsRecursive(int n, int m) {
-    if (n == 1 || m == 1)
-        return 1;
-    return uniquePathsRecursive(n - 1, m) + uniquePathsRecursive(n, m - 1);
+int n = 3, m = 3; // Grid size, can be customized
+
+// 1. Pure Recursion (Exponential Time)
+int countPathsRecursive(int i, int j) {
+    if (i == 0 && j == 0) return 1;
+    if (i < 0 || j < 0) return 0;
+
+    int up = countPathsRecursive(i - 1, j);
+    int left = countPathsRecursive(i, j - 1);
+    return up + left;
 }
 
-// ---------- 2. Memoization (Top-Down DP) ----------
-int dfs(int n, int m, vector<vector<int>>& memo) {
-    if (n == 1 || m == 1)
-        return 1;
-    if (memo[n][m] != -1)
-        return memo[n][m];
-    return memo[n][m] = dfs(n - 1, m, memo) + dfs(n, m - 1, memo);
+// 2. Memoization (Top-Down DP)
+int countPathsMemo(int i, int j, vector<vector<int>>& dp) {
+    if (i == 0 && j == 0) return 1;
+    if (i < 0 || j < 0) return 0;
+    if (dp[i][j] != -1) return dp[i][j];
+
+    int up = countPathsMemo(i - 1, j, dp);
+    int left = countPathsMemo(i, j - 1, dp);
+    return dp[i][j] = up + left;
 }
 
-int uniquePathsMemo(int n, int m) {
-    vector<vector<int>> memo(n + 1, vector<int>(m + 1, -1));
-    return dfs(n, m, memo);
+// 3. Tabulation (Bottom-Up DP)
+int countPathsTabulation(int n, int m) {
+    vector<vector<int>> dp(n, vector<int>(m, 0));
+    dp[0][0] = 1;
+
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < m; ++j) {
+            if (i == 0 && j == 0) continue;
+            int up = (i > 0) ? dp[i - 1][j] : 0;
+            int left = (j > 0) ? dp[i][j - 1] : 0;
+            dp[i][j] = up + left;
+        }
+    }
+    return dp[n - 1][m - 1];
 }
 
-// ---------- 3. DP Tabulation (Bottom-Up) ----------
-int uniquePathsDP(int n, int m) {
-    vector<vector<int>> dp(n, vector<int>(m, 1));
-
-    for (int i = n - 2; i >= 0; --i)
-        for (int j = m - 2; j >= 0; --j)
-            dp[i][j] = dp[i + 1][j] + dp[i][j + 1];
-
-    return dp[0][0];
+// 4. Space Optimized DP (Using 1D Array)
+int countPathsSpaceOptimized(int n, int m) {
+    vector<int> prev(m, 0);
+    for (int i = 0; i < n; ++i) {
+        vector<int> curr(m, 0);
+        for (int j = 0; j < m; ++j) {
+            if (i == 0 && j == 0) curr[j] = 1;
+            else {
+                int up = (i > 0) ? prev[j] : 0;
+                int left = (j > 0) ? curr[j - 1] : 0;
+                curr[j] = up + left;
+            }
+        }
+        prev = curr;
+    }
+    return prev[m - 1];
 }
 
-// ---------- 4. Space Optimized DP ----------
-int uniquePathsDPOptimized(int n, int m) {
-    vector<int> dp(m, 1);
-
-    for (int i = n - 2; i >= 0; --i)
-        for (int j = m - 2; j >= 0; --j)
-            dp[j] += dp[j + 1];
-
-    return dp[0];
-}
-
-// ---------- 5. Combinatorics ----------
-int uniquePathsCombinatorics(int n, int m) {
-    long long res = 1;
-    for (int i = 1; i <= n - 1; ++i)
-        res = res * (m - 1 + i) / i;
-    return (int)res;
-}
-
-// ---------- Main Program ----------
 int main() {
-    int n, m;
-    cout << "Enter number of rows (n): ";
-    cin >> n;
-    cout << "Enter number of columns (m): ";
-    cin >> m;
+    cout << "Grid size: " << n << " x " << m << "\n";
 
-    cout << "\n--- Unique Paths from bottom-right to top-left for " << n << "x" << m << " grid ---\n";
-    cout << "1. Recursive (Brute Force): ";
-    if (n <= 10 && m <= 10)
-        cout << uniquePathsRecursive(n, m) << endl;
-    else
-        cout << "Skipped (too large for recursion)\n";
+    // 1. Recursive
+    cout << "1. Pure Recursion: " << countPathsRecursive(n - 1, m - 1) << "\n";
 
-    cout << "2. Memoization (Top-Down DP): " << uniquePathsMemo(n, m) << endl;
-    cout << "3. DP Tabulation (Bottom-Up): " << uniquePathsDP(n, m) << endl;
-    cout << "4. Space Optimized DP: " << uniquePathsDPOptimized(n, m) << endl;
-    cout << "5. Combinatorics: " << uniquePathsCombinatorics(n, m) << endl;
+    // 2. Memoization
+    vector<vector<int>> dp(n, vector<int>(m, -1));
+    cout << "2. Memoization: " << countPathsMemo(n - 1, m - 1, dp) << "\n";
+
+    // 3. Tabulation
+    cout << "3. Tabulation: " << countPathsTabulation(n, m) << "\n";
+
+    // 4. Space Optimized
+    cout << "4. Space Optimized: " << countPathsSpaceOptimized(n, m) << "\n";
 
     return 0;
 }
