@@ -4,20 +4,16 @@ using namespace std;
 
 class Solution {
 public:
-    int mod = 1e9 + 7;
 
     // 1. Plain Recursive (No memoization)
     int countSubsetsRecursive(int i, int currentSum, int arr[], int target) {
         if (i < 0)
             return (currentSum == target) ? 1 : 0;
 
-        // Don't pick the current element
         int exclude = countSubsetsRecursive(i - 1, currentSum, arr, target);
-
-        // Pick the current element
         int include = countSubsetsRecursive(i - 1, currentSum + arr[i], arr, target);
 
-        return (include + exclude);
+        return include + exclude;
     }
 
     int perfectSumRecursive(int arr[], int n, int target) {
@@ -25,7 +21,7 @@ public:
     }
 
     // 2. Recursive with Memoization
-    int f(int ind, int arr[], int n, int target, vector<vector<int>> &dp) {
+    int f(int ind, int arr[], int target, vector<vector<int>> &dp) {
         if (ind == 0) {
             if (target == 0 && arr[0] == 0) return 2;
             if (target == 0 || target == arr[0]) return 1;
@@ -34,46 +30,45 @@ public:
 
         if (dp[ind][target] != -1) return dp[ind][target];
 
-        int notPick = f(ind - 1, arr, n, target, dp) % mod;
+        int notPick = f(ind - 1, arr, target, dp);
         int pick = 0;
         if (arr[ind] <= target)
-            pick = f(ind - 1, arr, n, target - arr[ind], dp) % mod;
+            pick = f(ind - 1, arr, target - arr[ind], dp);
 
-        return dp[ind][target] = (pick + notPick) % mod;
+        return dp[ind][target] = pick + notPick;
     }
 
     int perfectSumMemo(int arr[], int n, int sum) {
         vector<vector<int>> dp(n, vector<int>(sum + 1, -1));
-        return f(n - 1, arr, n, sum, dp);
+        return f(n - 1, arr, sum, dp);
     }
 
     // 3. Bottom-Up Tabulation DP
     int perfectSumTabulation(int arr[], int n, int sum) {
         vector<vector<int>> dp(n, vector<int>(sum + 1, 0));
 
-        // Base Case
         if (arr[0] == 0)
-            dp[0][0] = 2; // pick and not pick
+            dp[0][0] = 2;
         else
-            dp[0][0] = 1; // only not pick
+            dp[0][0] = 1;
 
         if (arr[0] != 0 && arr[0] <= sum)
             dp[0][arr[0]] = 1;
 
         for (int ind = 1; ind < n; ind++) {
             for (int target = 0; target <= sum; target++) {
-                int notPick = dp[ind - 1][target] % mod;
+                int notPick = dp[ind - 1][target];
                 int pick = 0;
                 if (arr[ind] <= target)
-                    pick = dp[ind - 1][target - arr[ind]] % mod;
-                dp[ind][target] = (pick + notPick) % mod;
+                    pick = dp[ind - 1][target - arr[ind]];
+                dp[ind][target] = pick + notPick;
             }
         }
 
         return dp[n - 1][sum];
     }
 
-    // 4. Space Optimized DP (2 rows: prev & curr)
+    // 4. Space Optimized DP (2 arrays: prev & curr)
     int perfectSumSpaceOptimized(int arr[], int n, int sum) {
         vector<int> prev(sum + 1, 0);
 
@@ -88,11 +83,11 @@ public:
         for (int ind = 1; ind < n; ind++) {
             vector<int> curr(sum + 1, 0);
             for (int target = 0; target <= sum; target++) {
-                int notPick = prev[target] % mod;
+                int notPick = prev[target];
                 int pick = 0;
                 if (arr[ind] <= target)
-                    pick = prev[target - arr[ind]] % mod;
-                curr[target] = (pick + notPick) % mod;
+                    pick = prev[target - arr[ind]];
+                curr[target] = pick + notPick;
             }
             prev = curr;
         }
@@ -117,7 +112,7 @@ public:
                 int pick = 0;
                 if (arr[ind] <= target)
                     pick = dp[target - arr[ind]];
-                dp[target] = (dp[target] + pick) % mod;
+                dp[target] += pick;
             }
         }
 
